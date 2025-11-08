@@ -1,28 +1,51 @@
-import { useState } from 'react'
+import React, { useMemo, useState } from 'react';
+import Sidebar from './components/Sidebar.jsx';
+import ChannelList from './components/ChannelList.jsx';
+import MessagePane from './components/MessagePane.jsx';
+import MemberList from './components/MemberList.jsx';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Utility shades not in default Tailwind: extend via class names
+const AppShell = ({ children }) => (
+  <div className="h-screen w-screen overflow-hidden bg-[#0b0d12] text-gray-100">
+    {children}
+  </div>
+);
+
+export default function App() {
+  const [activeServer, setActiveServer] = useState('alpha');
+  const [activeChannel, setActiveChannel] = useState('general');
+  const [channels, setChannels] = useState([
+    { id: 'general', name: 'general', type: 'text' },
+    { id: 'announcements', name: 'announcements', type: 'text' },
+    { id: 'voice-1', name: 'Lounge', type: 'voice' },
+  ]);
+
+  const addChannel = () => {
+    const name = prompt('New channel name');
+    if (!name) return;
+    const id = name.toLowerCase().replace(/\s+/g, '-');
+    setChannels((prev) => [...prev, { id, name, type: 'text' }]);
+    setActiveChannel(id);
+  };
+
+  const header = useMemo(() => {
+    const c = channels.find(c => c.id === activeChannel);
+    return c ? c.name : 'general';
+  }, [channels, activeChannel]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          Vibe Coding Platform
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Your AI-powered development environment
-        </p>
-        <div className="text-center">
-          <button
-            onClick={() => setCount(count + 1)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
-          >
-            Count is {count}
-          </button>
-        </div>
+    <AppShell>
+      <div className="flex h-full">
+        <Sidebar activeServerId={activeServer} onSelectServer={setActiveServer} />
+        <ChannelList
+          channels={channels}
+          activeChannelId={activeChannel}
+          onSelectChannel={setActiveChannel}
+          onAddChannel={addChannel}
+        />
+        <MessagePane channelName={header} />
+        <MemberList onInvite={() => alert('Invite link copied!')} />
       </div>
-    </div>
-  )
+    </AppShell>
+  );
 }
-
-export default App
